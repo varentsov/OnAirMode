@@ -17,5 +17,8 @@ mkdir -p build/MicMonitor.app/Contents/Resources
 cp build/MicMonitor build/MicMonitor.app/Contents/MacOS/
 cp Info.plist build/MicMonitor.app/Contents/
 
+# Copy assets folder to Resources
+cp -r assets build/MicMonitor.app/Contents/Resources/
+
 echo "Build complete! App bundle created at build/MicMonitor.app"
 echo "To run: open build/MicMonitor.app"

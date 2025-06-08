@@ -12,11 +12,12 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusBar()
         requestMicrophonePermission()
+        startMonitoring()
     }
     
     private func setupStatusBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.title = "🎤"
+        updateStatusBarIcon()
         
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Start Monitoring", action: #selector(toggleMonitoring), keyEquivalent: ""))
@@ -70,7 +71,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     private func startMonitoring() {
         isMonitoring = true
         statusItem?.menu?.item(at: 0)?.title = "Stop Monitoring"
-        statusItem?.button?.title = "🎤🟢"
+        updateStatusBarIcon()
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             self.checkMicrophoneStatus()
@@ -82,7 +83,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         timer?.invalidate()
         timer = nil
         statusItem?.menu?.item(at: 0)?.title = "Start Monitoring"
-        statusItem?.button?.title = "🎤"
+        updateStatusBarIcon()
         
         if isDNDEnabled {
             toggleDoNotDisturb(enable: false)
@@ -94,10 +95,10 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         
         if isMicActive && !isDNDEnabled {
             toggleDoNotDisturb(enable: true)
-            statusItem?.button?.title = "🎤🔴"
+            updateStatusBarIcon()
         } else if !isMicActive && isDNDEnabled {
             toggleDoNotDisturb(enable: false)
-            statusItem?.button?.title = "🎤🟢"
+            updateStatusBarIcon()
         }
     }
     
@@ -173,6 +174,84 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         }
     }
     
+    private func updateStatusBarIcon() {
+        if !isMonitoring {
+            // Use gray icon when not monitoring
+            if let grayIcon = loadIcon(named: "icon_gray") {
+                grayIcon.size = NSSize(width: 18, height: 18)
+                statusItem?.button?.image = grayIcon
+                statusItem?.button?.title = ""
+                print("Set gray icon")
+            } else {
+                // Fallback to emoji if icon loading fails
+                statusItem?.button?.title = "🎙️"
+                statusItem?.button?.image = nil
+                print("Failed to load gray icon, using emoji fallback")
+            }
+        } else {
+            // Use template image (white/black) that adapts automatically
+            if let templateIcon = loadIcon(named: "icon_white") {
+                templateIcon.isTemplate = true
+                templateIcon.size = NSSize(width: 18, height: 18)
+                statusItem?.button?.image = templateIcon
+                statusItem?.button?.title = ""
+                print("Set template icon")
+            } else {
+                // Fallback to emoji if icon loading fails
+                statusItem?.button?.title = "🎤"
+                statusItem?.button?.image = nil
+                print("Failed to load template icon, using emoji fallback")
+            }
+        }
+    }
+    
+    private func loadIcon(named filename: String) -> NSImage? {
+        guard let executablePath = Bundle.main.executablePath else {
+            print("Failed to get executable path")
+            return nil
+        }
+        
+        var possiblePaths = [String]()
+        
+        // Path 1: App bundle structure (when using open command)
+        let macosPath = (executablePath as NSString).deletingLastPathComponent
+        let contentsPath = (macosPath as NSString).deletingLastPathComponent
+        let resourcesPath = "\(contentsPath)/Resources"
+        possiblePaths.append("\(resourcesPath)/assets/\(filename).svg")
+        
+        // Path 2: Direct execution from build directory
+        let buildPath = (executablePath as NSString).deletingLastPathComponent
+        possiblePaths.append("\(buildPath)/../assets/\(filename).svg")
+        
+        // Path 3: Working directory relative path
+        let currentDir = FileManager.default.currentDirectoryPath
+        possiblePaths.append("\(currentDir)/assets/\(filename).svg")
+        
+        for iconPath in possiblePaths {
+            print("Trying to load icon from: \(iconPath)")
+            
+            guard FileManager.default.fileExists(atPath: iconPath) else {
+                print("Icon file does not exist at path: \(iconPath)")
+                continue
+            }
+            
+            guard let svgData = NSData(contentsOfFile: iconPath) else { 
+                print("Failed to read SVG data from: \(iconPath)")
+                continue
+            }
+            
+            guard let image = NSImage(data: svgData as Data) else {
+                print("Failed to create NSImage from SVG data")
+                continue
+            }
+            
+            print("Successfully loaded icon: \(filename) from \(iconPath)")
+            return image
+        }
+        
+        print("Failed to load icon \(filename) from any path")
+        return nil
+    }
     
     @objc private func quit() {
         if isDNDEnabled {
