@@ -144,13 +144,21 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         let task = Process()
         task.launchPath = "/usr/bin/shortcuts"
         
-        // Use the new shortcut name and pass appropriate input
+        // Create temporary file with input text
         let inputText = enable ? "on" : "off"
-        task.arguments = ["run", "macos-focus-control", "--input-text", inputText]
+        let tempDir = FileManager.default.temporaryDirectory
+        let inputFile = tempDir.appendingPathComponent("shortcut_input.txt")
         
         do {
+            try inputText.write(to: inputFile, atomically: true, encoding: .utf8)
+            
+            task.arguments = ["run", "macos-focus-control", "--input-path", inputFile.path]
+            
             try task.run()
             task.waitUntilExit()
+            
+            // Clean up temp file
+            try? FileManager.default.removeItem(at: inputFile)
             
             if task.terminationStatus == 0 {
                 isDNDEnabled = enable
@@ -160,6 +168,8 @@ class MicMonitor: NSObject, NSApplicationDelegate {
             }
         } catch {
             print("Error running shortcuts command: \(error)")
+            // Clean up temp file in case of error
+            try? FileManager.default.removeItem(at: inputFile)
         }
     }
     
