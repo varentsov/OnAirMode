@@ -178,7 +178,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         if !isMonitoring {
             // Use gray icon when not monitoring
             if let grayIcon = loadIcon(named: "icon_gray") {
-                grayIcon.size = NSSize(width: 18, height: 18)
+                grayIcon.size = NSSize(width: 20, height: 20)
                 statusItem?.button?.image = grayIcon
                 statusItem?.button?.title = ""
                 print("Set gray icon")
@@ -192,7 +192,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
             // Use template image (white/black) that adapts automatically
             if let templateIcon = loadIcon(named: "icon_white") {
                 templateIcon.isTemplate = true
-                templateIcon.size = NSSize(width: 18, height: 18)
+                templateIcon.size = NSSize(width: 20, height: 20)
                 statusItem?.button?.image = templateIcon
                 statusItem?.button?.title = ""
                 print("Set template icon")
