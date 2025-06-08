@@ -1,0 +1,118 @@
+{
+    "name": "macos-focus-control",
+    "description": "This shortcut manages Do Not Disturb based on text input. It can turn Do Not Disturb on, off, on for a specified duration, or report the current Focus status.",
+    "trigger": {
+      "type": "text_input",
+      "source": "Nowhere",
+      "input_requirements": "The input must be 'status', 'on', 'off', or a number representing minutes. If no input is provided, the shortcut will stop and respond with an error message."
+    },
+    "actions": [
+      {
+        "type": "conditional",
+        "conditions": [
+          {
+            "if": {
+              "input": "Shortcut Input",
+              "operator": "begins with",
+              "value": "status"
+            },
+            "then": [
+              {
+                "action": "get_current_focus"
+              },
+              {
+                "action": "stop_and_output",
+                "output": "Name (of Current Focus)"
+              }
+            ]
+          },
+          {
+            "if": {
+              "input": "Shortcut Input",
+              "operator": "begins with",
+              "value": "off"
+            },
+            "then": [
+              {
+                "action": "turn_do_not_disturb",
+                "state": "Off"
+              },
+              {
+                "action": "stop_and_output",
+                "output": "Shortcut Input"
+              }
+            ]
+          },
+          {
+            "if": {
+              "input": "Shortcut Input",
+              "operator": "begins with",
+              "value": "on"
+            },
+            "then": [
+              {
+                "action": "turn_do_not_disturb",
+                "state": "Off"
+              },
+              {
+                "action": "turn_do_not_disturb",
+                "state": "On",
+                "duration": "until Turned Off"
+              },
+              {
+                "action": "get_current_focus"
+              },
+              {
+                "action": "stop_and_output",
+                "output": "Name (of Current Focus)"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "operation",
+        "action": "get_numbers_from_input",
+        "input": "Shortcut Input"
+      },
+      {
+        "type": "conditional",
+        "conditions": [
+          {
+            "if": {
+              "input": "Numbers (from previous action)",
+              "operator": "is greater than",
+              "value": 0
+            },
+            "then": [
+              {
+                "action": "turn_do_not_disturb",
+                "state": "Off"
+              },
+              {
+                "action": "add_to_date",
+                "date": "Current Date",
+                "value": "Shortcut Input",
+                "unit": "minutes"
+              },
+              {
+                "action": "turn_do_not_disturb",
+                "state": "On",
+                "duration": "until",
+                "time": "Adjusted Date"
+              },
+              {
+                "action": "stop_and_output",
+                "output": "Adjusted Date"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "final_action",
+        "action": "stop_and_output",
+        "output": "Numbers"
+      }
+    ]
+  }

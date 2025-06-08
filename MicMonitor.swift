@@ -144,11 +144,9 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         let task = Process()
         task.launchPath = "/usr/bin/shortcuts"
         
-        if enable {
-            task.arguments = ["run", "Turn On Do Not Disturb"]
-        } else {
-            task.arguments = ["run", "Turn Off Do Not Disturb"]
-        }
+        // Use the new shortcut name and pass appropriate input
+        let inputText = enable ? "on" : "off"
+        task.arguments = ["run", "macos-focus-control", "--input-text", inputText]
         
         do {
             try task.run()
@@ -156,49 +154,15 @@ class MicMonitor: NSObject, NSApplicationDelegate {
             
             if task.terminationStatus == 0 {
                 isDNDEnabled = enable
-                print("Do Not Disturb \(enable ? "enabled" : "disabled")")
+                print("Do Not Disturb \(enable ? "enabled" : "disabled") via macos-focus-control shortcut")
             } else {
-                print("Failed to toggle Do Not Disturb via Shortcuts")
-                fallbackToggleDND(enable: enable)
+                print("Failed to toggle Do Not Disturb - shortcut may not be installed")
             }
         } catch {
             print("Error running shortcuts command: \(error)")
-            fallbackToggleDND(enable: enable)
         }
     }
     
-    private func fallbackToggleDND(enable: Bool) {
-        let script = enable ?
-            "tell application \"System Events\"\ntell process \"Control Center\"\nclick menu bar item \"Control Center\" of menu bar 1\ndelay 0.5\nclick button \"Focus\" of window 1\ndelay 0.5\nclick button \"Do Not Disturb\" of window 1\nend tell\nend tell" :
-            "tell application \"System Events\"\ntell process \"Control Center\"\nclick menu bar item \"Control Center\" of menu bar 1\ndelay 0.5\nclick button \"Focus\" of window 1\ndelay 0.5\nclick button \"Do Not Disturb\" of window 1\nend tell\nend tell"
-        
-        let appleScript = NSAppleScript(source: script)
-        var error: NSDictionary?
-        let result = appleScript?.executeAndReturnError(&error)
-        
-        if let error = error {
-            print("AppleScript error: \(error)")
-            useProcessToggle(enable: enable)
-        } else {
-            isDNDEnabled = enable
-            print("Do Not Disturb \(enable ? "enabled" : "disabled") via AppleScript")
-        }
-    }
-    
-    private func useProcessToggle(enable: Bool) {
-        let task = Process()
-        task.launchPath = "/usr/bin/osascript"
-        task.arguments = ["-e", "tell application \"System Events\" to keystroke \"D\" using {command down, shift down}"]
-        
-        do {
-            try task.run()
-            task.waitUntilExit()
-            isDNDEnabled = enable
-            print("Do Not Disturb toggled via keyboard shortcut")
-        } catch {
-            print("All DND toggle methods failed: \(error)")
-        }
-    }
     
     @objc private func quit() {
         if isDNDEnabled {
