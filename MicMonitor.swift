@@ -190,7 +190,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
             }
         } else {
             // Use template image (white/black) that adapts automatically
-            if let templateIcon = loadIcon(named: "icon_white") {
+            if let templateIcon = loadIcon(named: "icon_black") {
                 templateIcon.isTemplate = true
                 templateIcon.size = NSSize(width: 20, height: 20)
                 statusItem?.button?.image = templateIcon
