@@ -22,7 +22,7 @@ mkdir -p build/OnAirMode.app/Contents/MacOS
 mkdir -p build/OnAirMode.app/Contents/Resources
 
 # Copy executable and Info.plist
-cp build/OnAirMode build/OnAirMode.app/Contents/MacOS/
+mv build/OnAirMode build/OnAirMode.app/Contents/MacOS/
 cp Info.plist build/OnAirMode.app/Contents/
 
 # Copy assets folder to Resources
