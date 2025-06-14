@@ -9,12 +9,20 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     private var isMonitoring = false
     private var isDNDEnabled = false
     private var isShortcutAvailable = false
+    private var shortcutCheckTimer: Timer?
+    private var shortcutCheckCount = 0
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusBar()
         requestMicrophonePermission()
         checkAndInstallShortcut()
-        startMonitoring()
+        updateMenuItems()
+        if isShortcutAvailable {
+            startMonitoring()
+        } else {
+            // Start periodic checking if shortcut not initially available
+            startPeriodicShortcutCheck()
+        }
     }
     
     private func setupStatusBar() {
@@ -63,6 +71,11 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     }
     
     @objc private func toggleMonitoring() {
+        if !isShortcutAvailable {
+            showShortcutMissingAlert()
+            return
+        }
+        
         if isMonitoring {
             stopMonitoring()
         } else {
@@ -72,7 +85,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     
     private func startMonitoring() {
         isMonitoring = true
-        statusItem?.menu?.item(at: 0)?.title = "Stop Monitoring"
+        updateMenuItems()
         updateStatusBarIcon()
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
@@ -84,7 +97,7 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         isMonitoring = false
         timer?.invalidate()
         timer = nil
-        statusItem?.menu?.item(at: 0)?.title = "Start Monitoring"
+        updateMenuItems()
         updateStatusBarIcon()
         
         if isDNDEnabled {
@@ -144,6 +157,11 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     }
     
     private func toggleDoNotDisturb(enable: Bool) {
+        guard isShortcutAvailable else {
+            print("❌ Cannot toggle DND - shortcut not available")
+            return
+        }
+        
         let task = Process()
         task.launchPath = "/usr/bin/shortcuts"
         
@@ -165,14 +183,18 @@ class MicMonitor: NSObject, NSApplicationDelegate {
             
             if task.terminationStatus == 0 {
                 isDNDEnabled = enable
-                print("Do Not Disturb \(enable ? "enabled" : "disabled") via macos-focus-control shortcut")
+                print("✅ Do Not Disturb \(enable ? "enabled" : "disabled") via macos-focus-control shortcut")
             } else {
-                print("Failed to toggle Do Not Disturb - shortcut may not be installed")
+                print("❌ Failed to toggle Do Not Disturb - shortcut command failed")
+                // Recheck shortcut availability in case it was removed
+                recheckShortcutAvailability()
             }
         } catch {
-            print("Error running shortcuts command: \(error)")
+            print("❌ Error running shortcuts command: \(error)")
             // Clean up temp file in case of error
             try? FileManager.default.removeItem(at: inputFile)
+            // Recheck shortcut availability
+            recheckShortcutAvailability()
         }
     }
     
@@ -278,10 +300,12 @@ class MicMonitor: NSObject, NSApplicationDelegate {
             let shortcuts = output.components(separatedBy: .newlines)
             if shortcuts.contains("macos-focus-control") {
                 print("✅ Shortcut 'macos-focus-control' already installed")
+                isShortcutAvailable = true
                 return
             } else {
                 print("❌ Shortcut 'macos-focus-control' NOT found")
                 print("Available shortcuts: \(shortcuts.filter { !$0.isEmpty })")
+                isShortcutAvailable = false
             }
         } catch {
             print("❌ Error checking shortcuts: \(error)")
@@ -347,10 +371,108 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         }
     }
     
+    private func updateMenuItems() {
+        guard let menu = statusItem?.menu else { return }
+        
+        if !isShortcutAvailable {
+            menu.item(at: 0)?.title = "Shortcut Not Installed"
+            menu.item(at: 0)?.isEnabled = false
+        } else if isMonitoring {
+            menu.item(at: 0)?.title = "Stop Monitoring"
+            menu.item(at: 0)?.isEnabled = true
+        } else {
+            menu.item(at: 0)?.title = "Start Monitoring"
+            menu.item(at: 0)?.isEnabled = true
+        }
+    }
+    
+    private func showShortcutMissingAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Shortcut Required"
+        alert.informativeText = "The 'macos-focus-control' shortcut is required for monitoring to work. Please install it through the Shortcuts app."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+    
+    private func startPeriodicShortcutCheck() {
+        guard !isShortcutAvailable else { return }
+        
+        shortcutCheckCount = 0
+        print("🔄 Starting periodic shortcut checking...")
+        
+        // Start with 1-second intervals
+        shortcutCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.periodicShortcutCheck()
+        }
+    }
+    
+    private func periodicShortcutCheck() {
+        shortcutCheckCount += 1
+        
+        // Check if we need to switch to 5-second intervals after 30 checks (30 seconds)
+        if shortcutCheckCount == 30 {
+            print("🔄 Switching to 5-second intervals for shortcut checking...")
+            shortcutCheckTimer?.invalidate()
+            shortcutCheckTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+                self.periodicShortcutCheck()
+            }
+        }
+        
+        let wasAvailable = isShortcutAvailable
+        recheckShortcutAvailability()
+        
+        // Stop checking if shortcut becomes available
+        if isShortcutAvailable && !wasAvailable {
+            print("✅ Shortcut detected! Stopping periodic checks.")
+            stopPeriodicShortcutCheck()
+        }
+    }
+    
+    private func stopPeriodicShortcutCheck() {
+        shortcutCheckTimer?.invalidate()
+        shortcutCheckTimer = nil
+        shortcutCheckCount = 0
+    }
+    
+    private func recheckShortcutAvailability() {
+        let task = Process()
+        task.launchPath = "/usr/bin/shortcuts"
+        task.arguments = ["list"]
+        
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        
+        do {
+            try task.run()
+            task.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+            
+            let shortcuts = output.components(separatedBy: .newlines)
+            let wasAvailable = isShortcutAvailable
+            isShortcutAvailable = shortcuts.contains("macos-focus-control")
+            
+            if isShortcutAvailable != wasAvailable {
+                print("🔄 Shortcut availability changed: \(isShortcutAvailable)")
+                updateMenuItems()
+                
+                if isShortcutAvailable && !isMonitoring {
+                    print("🚀 Auto-starting monitoring now that shortcut is available")
+                    startMonitoring()
+                }
+            }
+        } catch {
+            print("❌ Error rechecking shortcuts: \(error)")
+        }
+    }
+    
     @objc private func quit() {
         if isDNDEnabled {
             toggleDoNotDisturb(enable: false)
         }
+        stopPeriodicShortcutCheck()
         NSApplication.shared.terminate(self)
     }
 }
