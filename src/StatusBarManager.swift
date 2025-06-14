@@ -5,6 +5,7 @@ class StatusBarManager {
     
     var onToggleMonitoring: (() -> Void)?
     var onQuit: (() -> Void)?
+    var onToggleLaunchAtLogin: (() -> Void)?
     
     func setupStatusBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -15,6 +16,12 @@ class StatusBarManager {
         let monitoringItem = NSMenuItem(title: "Start Monitoring", action: #selector(toggleMonitoring), keyEquivalent: "")
         monitoringItem.target = self
         menu.addItem(monitoringItem)
+        
+        menu.addItem(NSMenuItem.separator())
+        
+        let launchAtLoginItem = NSMenuItem(title: "Start at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launchAtLoginItem.target = self
+        menu.addItem(launchAtLoginItem)
         
         menu.addItem(NSMenuItem.separator())
         
@@ -39,7 +46,7 @@ class StatusBarManager {
         }
     }
     
-    func updateMenuItems(isShortcutAvailable: Bool, isMonitoring: Bool) {
+    func updateMenuItems(isShortcutAvailable: Bool, isMonitoring: Bool, launchAtLogin: Bool = false) {
         guard let menu = statusItem?.menu else { return }
         
         if !isShortcutAvailable {
@@ -52,6 +59,9 @@ class StatusBarManager {
             menu.item(at: 0)?.title = "Start Monitoring"
             menu.item(at: 0)?.isEnabled = true
         }
+        
+        // Update launch at login menu item (at index 2)
+        menu.item(at: 2)?.state = launchAtLogin ? .on : .off
     }
     
     private func loadIcon(named filename: String) -> NSImage? {
@@ -77,6 +87,10 @@ class StatusBarManager {
     
     @objc private func toggleMonitoring() {
         onToggleMonitoring?()
+    }
+    
+    @objc private func toggleLaunchAtLogin() {
+        onToggleLaunchAtLogin?()
     }
     
     @objc private func quit() {

@@ -9,12 +9,14 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     private let shortcutManager = ShortcutManager()
     private let statusBarManager = StatusBarManager()
     private let permissionManager = PermissionManager()
+    private let launchAtLoginManager = LaunchAtLoginManager()
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupDelegates()
         statusBarManager.setupStatusBar()
         permissionManager.requestMicrophonePermission()
         shortcutManager.checkAndInstallShortcut()
+        launchAtLoginManager.initialize()
         updateMenuItems()
         
         if shortcutManager.isShortcutAvailable {
@@ -31,6 +33,10 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         
         statusBarManager.onQuit = { [weak self] in
             self?.quit()
+        }
+        
+        statusBarManager.onToggleLaunchAtLogin = { [weak self] in
+            self?.toggleLaunchAtLogin()
         }
         
         shortcutManager.onShortcutAvailabilityChanged = { [weak self] isAvailable in
@@ -94,8 +100,14 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     private func updateMenuItems() {
         statusBarManager.updateMenuItems(
             isShortcutAvailable: shortcutManager.isShortcutAvailable,
-            isMonitoring: isMonitoring
+            isMonitoring: isMonitoring,
+            launchAtLogin: launchAtLoginManager.isEnabled
         )
+    }
+    
+    private func toggleLaunchAtLogin() {
+        launchAtLoginManager.isEnabled.toggle()
+        updateMenuItems()
     }
     
     private func handleShortcutAvailabilityChanged(_ isAvailable: Bool) {

@@ -13,9 +13,11 @@ swiftc -o build/OnAirMode-arm64 \
     src/ShortcutManager.swift \
     src/StatusBarManager.swift \
     src/PermissionManager.swift \
+    src/LaunchAtLoginManager.swift \
     -framework Cocoa \
     -framework AVFoundation \
     -framework CoreAudio \
+    -framework ServiceManagement \
     -target arm64-apple-macos11.0
 
 # Compile Swift application for x86_64
@@ -25,9 +27,11 @@ swiftc -o build/OnAirMode-x86_64 \
     src/ShortcutManager.swift \
     src/StatusBarManager.swift \
     src/PermissionManager.swift \
+    src/LaunchAtLoginManager.swift \
     -framework Cocoa \
     -framework AVFoundation \
     -framework CoreAudio \
+    -framework ServiceManagement \
     -target x86_64-apple-macos10.15
 
 # Create universal binary
