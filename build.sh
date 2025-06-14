@@ -40,9 +40,13 @@ rm build/OnAirMode-arm64 build/OnAirMode-x86_64
 mkdir -p build/OnAirMode.app/Contents/MacOS
 mkdir -p build/OnAirMode.app/Contents/Resources
 
-# Copy executable and Info.plist
+# Copy executable and Info.plist with build metadata
 mv build/OnAirMode build/OnAirMode.app/Contents/MacOS/
 cp Info.plist build/OnAirMode.app/Contents/
+
+# Add build commit hash to Info.plist
+COMMIT_HASH=$(git rev-parse HEAD)
+/usr/libexec/PlistBuddy -c "Add :BuildCommit string $COMMIT_HASH" build/OnAirMode.app/Contents/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :BuildCommit $COMMIT_HASH" build/OnAirMode.app/Contents/Info.plist
 
 # Copy assets folder to Resources
 cp -r assets build/OnAirMode.app/Contents/Resources/

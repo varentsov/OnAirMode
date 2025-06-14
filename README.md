@@ -21,11 +21,6 @@ OnAirMode is a smart macOS status bar application that automatically enables Do 
 - Visual indicators show monitoring status at a glance
 - Unobtrusive design that fits perfectly in your menu bar
 
-### ⚡ **Smart Auto-Recovery**
-- Automatically detects and installs required shortcuts
-- Self-healing: recovers if shortcuts are accidentally removed
-- Intelligent periodic checking with optimized intervals
-
 ### 🛡️ **Privacy-First Design**
 - No data collection or external connections
 - All processing happens locally on your Mac
@@ -34,11 +29,25 @@ OnAirMode is a smart macOS status bar application that automatically enables Do 
 ## 🚀 Quick Start
 
 ### Installation
-1. Download the latest release
-2. Open `OnAirMode.app`
-3. Grant microphone permissions when prompted
-4. Install the included shortcut when prompted
-5. You're ready to go!
+
+#### Option 1: Download Pre-built Release
+1. Download the latest `OnAirMode.dmg` from [GitHub Releases](../../releases)
+2. Open the DMG and drag OnAirMode to Applications
+3. Launch OnAirMode from Applications
+4. Grant microphone permissions when prompted
+5. Install the included shortcut when prompted
+6. You're ready to go!
+
+#### Option 2: Build from Source
+1. Clone this repository: `git clone <repository-url>`
+2. Navigate to the project directory: `cd mic`
+3. Run the build script: `./build.sh`
+4. The DMG will be created at `build/OnAirMode.dmg`
+5. Install following the steps above
+
+**Requirements for building:**
+- Xcode Command Line Tools
+- macOS 10.15 or later
 
 ### How It Works
 1. **Start Monitoring**: Click the status bar icon and select "Start Monitoring"
@@ -68,45 +77,11 @@ OnAirMode is a smart macOS status bar application that automatically enables Do 
 - Distraction-free virtual presentations
 - Professional appearance during online exams
 
-## 🔧 Technical Excellence
-
-### Modern Architecture
-- Modular Swift codebase with clear separation of concerns
-- Efficient CoreAudio integration for precise hardware monitoring
-- Native macOS Shortcuts integration for system-level control
-
-### Resource Efficient
-- Minimal CPU usage (< 1% during monitoring)
-- Tiny memory footprint (< 10MB RAM)
-- Battery-friendly background operation
-
-### Reliable Operation
-- Robust error handling and auto-recovery
-- Handles system sleep/wake cycles gracefully
-- Continues working after system updates
-
 ## 📋 Requirements
 
 - macOS 10.15 (Catalina) or later
 - Microphone access permission
 - Shortcuts app (included with macOS)
-
-## 🎛️ Advanced Features
-
-### Intelligent Shortcut Management
-- Automatic shortcut detection and installation
-- Self-repairing if shortcuts are modified or deleted
-- Seamless updates without manual intervention
-
-### Flexible Icon System
-- SVG-based icons for crisp display at any resolution
-- Automatic light/dark mode adaptation
-- Fallback emoji icons for maximum compatibility
-
-### Smart Monitoring
-- Configurable sensitivity for different microphone types
-- Works with USB, Bluetooth, and built-in microphones
-- Handles multiple audio input devices intelligently
 
 ## 🤝 Contributing
 
