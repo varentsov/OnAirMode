@@ -7,7 +7,12 @@ rm -rf build
 mkdir -p build
 
 # Compile Swift application
-swiftc -o build/OnAirMode OnAirMode.swift \
+swiftc -o build/OnAirMode \
+    OnAirMode.swift \
+    AudioMonitor.swift \
+    ShortcutManager.swift \
+    StatusBarManager.swift \
+    PermissionManager.swift \
     -framework Cocoa \
     -framework AVFoundation \
     -framework CoreAudio
