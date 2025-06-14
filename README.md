@@ -39,8 +39,8 @@ OnAirMode is a smart macOS status bar application that automatically enables Do 
 6. You're ready to go!
 
 #### Option 2: Build from Source
-1. Clone this repository: `git clone <repository-url>`
-2. Navigate to the project directory: `cd mic`
+1. Clone this repository: `git clone https://github.com/varentsov/OnAirMode.git`
+2. Navigate to the project directory: `cd OnAirMode`
 3. Run the build script: `./build.sh`
 4. The DMG will be created at `build/OnAirMode.dmg`
 5. Install following the steps above
