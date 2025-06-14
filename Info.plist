@@ -5,13 +5,13 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>MicMonitor</string>
+    <string>OnAirMode</string>
     <key>CFBundleIdentifier</key>
-    <string>com.varentsov.micmonitor.app</string>
+    <string>com.varentsov.onairmode.app</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>MicMonitor</string>
+    <string>OnAirMode</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

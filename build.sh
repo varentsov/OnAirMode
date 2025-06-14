@@ -7,21 +7,24 @@ rm -rf build
 mkdir -p build
 
 # Compile Swift application
-swiftc -o build/MicMonitor MicMonitor.swift \
+swiftc -o build/OnAirMode OnAirMode.swift \
     -framework Cocoa \
     -framework AVFoundation \
     -framework CoreAudio
 
 # Create app bundle structure
-mkdir -p build/MicMonitor.app/Contents/MacOS
-mkdir -p build/MicMonitor.app/Contents/Resources
+mkdir -p build/OnAirMode.app/Contents/MacOS
+mkdir -p build/OnAirMode.app/Contents/Resources
 
 # Copy executable and Info.plist
-cp build/MicMonitor build/MicMonitor.app/Contents/MacOS/
-cp Info.plist build/MicMonitor.app/Contents/
+cp build/OnAirMode build/OnAirMode.app/Contents/MacOS/
+cp Info.plist build/OnAirMode.app/Contents/
 
 # Copy assets folder to Resources
-cp -r assets build/MicMonitor.app/Contents/Resources/
+cp -r assets build/OnAirMode.app/Contents/Resources/
 
-echo "Build complete! App bundle created at build/MicMonitor.app"
-echo "To run: open build/MicMonitor.app"
+# Copy shortcut file to Resources
+cp macos-focus-control.shortcut build/OnAirMode.app/Contents/Resources/
+
+echo "Build complete! App bundle created at build/OnAirMode.app"
+echo "To run: open build/OnAirMode.app"

@@ -8,10 +8,12 @@ class MicMonitor: NSObject, NSApplicationDelegate {
     private var timer: Timer?
     private var isMonitoring = false
     private var isDNDEnabled = false
+    private var isShortcutAvailable = false
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusBar()
         requestMicrophonePermission()
+        checkAndInstallShortcut()
         startMonitoring()
     }
     
@@ -251,6 +253,98 @@ class MicMonitor: NSObject, NSApplicationDelegate {
         
         print("Failed to load icon \(filename) from any path")
         return nil
+    }
+    
+    private func checkAndInstallShortcut() {
+        print("=== CHECKING SHORTCUT INSTALLATION ===")
+        
+        // Check if shortcut already exists
+        let task = Process()
+        task.launchPath = "/usr/bin/shortcuts"
+        task.arguments = ["list"]
+        
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        
+        do {
+            try task.run()
+            task.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+            
+            print("Shortcuts command output: \(output)")
+            
+            let shortcuts = output.components(separatedBy: .newlines)
+            if shortcuts.contains("macos-focus-control") {
+                print("✅ Shortcut 'macos-focus-control' already installed")
+                return
+            } else {
+                print("❌ Shortcut 'macos-focus-control' NOT found")
+                print("Available shortcuts: \(shortcuts.filter { !$0.isEmpty })")
+            }
+        } catch {
+            print("❌ Error checking shortcuts: \(error)")
+        }
+        
+        // Install shortcut from bundle
+        print("Attempting to install shortcut from bundle...")
+        installShortcutFromBundle()
+    }
+    
+    private func installShortcutFromBundle() {
+        print("=== INSTALLING SHORTCUT FROM BUNDLE ===")
+        
+        guard let resourcePath = Bundle.main.resourcePath else {
+            print("❌ Could not find app resource path")
+            return
+        }
+        
+        print("App resource path: \(resourcePath)")
+        
+        let shortcutPath = "\(resourcePath)/macos-focus-control.shortcut"
+        print("Looking for shortcut at: \(shortcutPath)")
+        
+        guard FileManager.default.fileExists(atPath: shortcutPath) else {
+            print("❌ Shortcut file not found in app bundle")
+            
+            // List what's actually in the Resources directory
+            do {
+                let contents = try FileManager.default.contentsOfDirectory(atPath: resourcePath)
+                print("Contents of Resources directory: \(contents)")
+            } catch {
+                print("Could not list Resources directory: \(error)")
+            }
+            return
+        }
+        
+        print("✅ Found shortcut file in bundle")
+        
+        // Copy to temp location and open
+        let tempPath = "/tmp/macos-focus-control.shortcut"
+        
+        do {
+            if FileManager.default.fileExists(atPath: tempPath) {
+                try FileManager.default.removeItem(atPath: tempPath)
+            }
+            try FileManager.default.copyItem(atPath: shortcutPath, toPath: tempPath)
+            
+            print("✅ Copied shortcut to temp location: \(tempPath)")
+            
+            // Open shortcut for installation
+            let workspace = NSWorkspace.shared
+            workspace.open(URL(fileURLWithPath: tempPath))
+            
+            print("🚀 Shortcut installation initiated - please approve in Shortcuts app")
+            
+            // Clean up after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                try? FileManager.default.removeItem(atPath: tempPath)
+                print("🧹 Cleaned up temp shortcut file")
+            }
+        } catch {
+            print("❌ Error installing shortcut: \(error)")
+        }
     }
     
     @objc private func quit() {
