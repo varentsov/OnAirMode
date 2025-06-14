@@ -47,8 +47,14 @@ cp Info.plist build/OnAirMode.app/Contents/
 # Copy assets folder to Resources
 cp -r assets build/OnAirMode.app/Contents/Resources/
 
+# Copy app icon
+cp icons/AppIcon.icns build/OnAirMode.app/Contents/Resources/AppIcon.icns
+
 # Copy shortcut file to Resources
 cp macos-focus-control.shortcut build/OnAirMode.app/Contents/Resources/
+
+# Code sign the application (ad-hoc signing)
+codesign --force --deep --sign - build/OnAirMode.app
 
 # Create DMG with Applications folder
 mkdir -p build/dmg
