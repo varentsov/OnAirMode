@@ -8,11 +8,11 @@ mkdir -p build
 
 # Compile Swift application
 swiftc -o build/OnAirMode \
-    OnAirMode.swift \
-    AudioMonitor.swift \
-    ShortcutManager.swift \
-    StatusBarManager.swift \
-    PermissionManager.swift \
+    src/OnAirMode.swift \
+    src/AudioMonitor.swift \
+    src/ShortcutManager.swift \
+    src/StatusBarManager.swift \
+    src/PermissionManager.swift \
     -framework Cocoa \
     -framework AVFoundation \
     -framework CoreAudio
