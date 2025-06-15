@@ -42,18 +42,11 @@ class ShortcutManager {
         task.launchPath = "/usr/bin/shortcuts"
         
         let inputText = enable ? "on" : "off"
-        let tempDir = FileManager.default.temporaryDirectory
-        let inputFile = tempDir.appendingPathComponent("shortcut_input.txt")
+        task.arguments = ["run", "macos-focus-control", "-i", inputText]
         
         do {
-            try inputText.write(to: inputFile, atomically: true, encoding: .utf8)
-            
-            task.arguments = ["run", "macos-focus-control", "--input-path", inputFile.path]
-            
             try task.run()
             task.waitUntilExit()
-            
-            try? FileManager.default.removeItem(at: inputFile)
             
             if task.terminationStatus != 0 {
                 recheckShortcutAvailability()
@@ -62,7 +55,6 @@ class ShortcutManager {
             
             return true
         } catch {
-            try? FileManager.default.removeItem(at: inputFile)
             recheckShortcutAvailability()
             return false
         }
